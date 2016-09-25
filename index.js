@@ -1,6 +1,8 @@
 'use strict'
+const parse = require('url').parse
 const express = require('express')
-const shortUrl = require('./tiny-url')
+const isUri = require('valid-url').isUri
+const tinyUrl = require('./tiny-url')
 
 const app = express()
 
@@ -9,18 +11,27 @@ app.get('/', (req, res) => {
 })
 
 app.get('/*', (req, res) => {
-  shortUrl.shorten(req.params, (err, url) => {
-    if (err) {
-      res.json({
-        error: err.toString()
+  const params = req.params
+  const uri = params[0]
+  if (!isUri(uri) || !parse(uri.slice(1)).hostname) {
+    return res
+      .status(400)
+      .json({
+        error: 'Bad Request',
+        message: `'${uri.slice(1)}' is not a valid URL`
       })
+  }
+  tinyUrl.shorten(uri, (err, shortened) => {
+    if (err) {
+      return res
+        .status(500)
+        .json({ error: err.toString() })
     }
-    console.log(url)
     res.json({
-      original_url: req.params,
-      short_url: url
+      original_url: uri,
+      short_url: shortened
     })
   })
 })
 
-app.listen(3000)
+app.listen(3000, () => console.log('listening on 3000'))
