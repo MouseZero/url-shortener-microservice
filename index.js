@@ -7,7 +7,7 @@ const tinyUrl = require('./tiny-url')
 const app = express()
 
 app.get('/', (req, res) => {
-  res.end('Hello World')
+  res.send('Your url needs to be in the path')
 })
 
 app.get('/*', (req, res) => {
